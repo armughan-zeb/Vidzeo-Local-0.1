@@ -163,14 +163,14 @@ if %errorlevel% == 0 (
 )
 
 echo       Installing core packages...
-%PIP_CMD% install --quiet --disable-pip-version-check flask flask-cors Pillow requests numpy soundfile pydub groq openai duckduckgo-search together
+call "%PIP_CMD%" install --quiet --disable-pip-version-check flask flask-cors Pillow requests numpy soundfile pydub groq openai duckduckgo-search together
 
 echo       Installing Kokoro TTS (this downloads ~500MB model)...
-%PIP_CMD% install --quiet --disable-pip-version-check hatchling
-%PIP_CMD% install --quiet --disable-pip-version-check https://github.com/hexgrad/kokoro/archive/refs/heads/main.zip
+call "%PIP_CMD%" install --quiet --disable-pip-version-check hatchling
+call "%PIP_CMD%" install --quiet --disable-pip-version-check https://github.com/hexgrad/kokoro/archive/refs/heads/main.zip
 
 echo       Installing Whisper for captions...
-%PIP_CMD% install --quiet --disable-pip-version-check openai-whisper
+call "%PIP_CMD%" install --quiet --disable-pip-version-check openai-whisper
 
 echo       [OK] All dependencies installed
 echo.
