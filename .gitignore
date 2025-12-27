@@ -1,0 +1,62 @@
+# ===========================================
+# Vidzeo Local - Git Ignore
+# ===========================================
+
+# Python virtual environments
+venv/
+venv310/
+kokoro_env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Models and large files (download on first run)
+models/
+kokoro_tts/
+*.bin
+*.ckpt
+*.pt
+*.pth
+
+# Output and temp files
+output/
+temp/
+*.mp4
+*.mp3
+*.wav
+*.webm
+*.png
+*.jpg
+*.jpeg
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment files with secrets
+.env
+*.env
+
+# Logs
+*.log
+logs/
+
+# Tools (downloaded automatically)
+tools/python/
+tools/ffmpeg/
+
+# Kaggle specific (not needed for local)
+# KAGGLE_APP.py
+# KAGGLE_INSTALL.py

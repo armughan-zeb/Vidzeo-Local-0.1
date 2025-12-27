@@ -1,0 +1,41 @@
+╔══════════════════════════════════════════════════════════════╗
+║          VIDZEO LOCAL - AI Video Generator                   ║
+║                   Quick Start Guide                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+FIRST TIME SETUP (5-10 minutes):
+═════════════════════════════════
+1. Double-click: INSTALL_AND_RUN.bat
+2. Wait for downloads to complete
+3. Browser opens automatically at http://localhost:5000
+
+AFTER INSTALLATION:
+═══════════════════
+• Double-click: start.bat (faster startup)
+
+WHAT GETS DOWNLOADED:
+═════════════════════
+• Python 3.10 (if not installed)
+• FFmpeg (for video processing)
+• Kokoro TTS (~500MB - AI voice)
+• Whisper (~150MB - caption sync)
+
+API KEYS NEEDED:
+════════════════
+Set these in the Settings tab:
+
+1. Groq API Key (FREE) - for script generation
+   → Get at: https://console.groq.com
+
+2. Pollinations AI Key (OPTIONAL, FREE)
+   → Get at: https://enter.pollinations.ai
+
+TROUBLESHOOTING:
+════════════════
+• If download fails: Check internet connection
+• If server won't start: Run as Administrator
+• If browser doesn't open: Go to http://localhost:5000
+
+SUPPORT:
+════════
+GitHub: https://github.com/armughan-zeb/Vidzeo-Local-0.1

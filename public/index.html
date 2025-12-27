@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidzeo Local - AI Video Generator</title>
+    <meta name="description"
+        content="Generate AI-powered videos with text-to-speech, auto-captions, and stunning visual effects">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🎬</span>
+                <h1>Vidzeo Local</h1>
+                <span class="version">v1.0</span>
+            </div>
+            <div class="status-bar">
+                <span class="status-item" id="statusTTS">🎙️ TTS: --</span>
+                <span class="status-item" id="statusWhisper">📝 Whisper: --</span>
+                <span class="status-item" id="statusFFmpeg">🎬 FFmpeg: --</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="settings">⚙️ Settings</button>
+                <button class="tab" data-tab="single">🎬 Single Generation</button>
+                <button class="tab" data-tab="bulk">📦 Bulk Generation</button>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content active" id="tab-settings">
+                <div class="settings-page">
+                    <div class="settings-header">
+                        <h2>⚙️ API Keys & Settings</h2>
+                        <p>Configure your API keys here. They will be saved in your browser and auto-filled in the
+                            generation forms.</p>
+                    </div>
+
+                    <div class="settings-grid">
+                        <!-- Groq API Key -->
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h3>🔮 Groq API</h3>
+                                <span class="api-status" id="groqStatus">Not Set</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="api-description">Used for AI script generation from titles. Get your free API
+                                    key from <a href="https://console.groq.com/keys"
+                                        target="_blank">console.groq.com</a></p>
+                                <div class="api-input-group">
+                                    <input type="password" id="settingsGroqKey" placeholder="gsk_xxxxxxxxxxxx">
+                                    <button class="btn btn-icon" onclick="togglePassword('settingsGroqKey')"
+                                        title="Show/Hide">👁️</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Together AI Key -->
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h3>🎨 Together AI</h3>
+                                <span class="api-status" id="togetherStatus">Not Set</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="api-description">Used for AI image generation. Get your API key from <a
+                                        href="https://api.together.xyz/settings/api-keys"
+                                        target="_blank">together.ai</a></p>
+                                <div class="api-input-group">
+                                    <input type="password" id="settingsTogetherKey" placeholder="xxxxxxxxxxxxxxxx">
+                                    <button class="btn btn-icon" onclick="togglePassword('settingsTogetherKey')"
+                                        title="Show/Hide">👁️</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pollinations AI Key -->
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h3>🌸 Pollinations AI</h3>
+                                <span class="api-status" id="pollinationsStatus">Optional (Free)</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="api-description">FREE image generation. Key is optional but removes watermarks
+                                    & increases limits. Get key from <a href="https://enter.pollinations.ai"
+                                        target="_blank">enter.pollinations.ai</a></p>
+                                <div class="api-input-group">
+                                    <input type="password" id="settingsPollinationsKey"
+                                        placeholder="pk_xxxxxxxxxxxxxxxx (optional)">
+                                    <button class="btn btn-icon" onclick="togglePassword('settingsPollinationsKey')"
+                                        title="Show/Hide">👁️</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-actions">
+                        <button class="btn btn-primary" id="saveSettingsBtn">💾 Save Settings</button>
+                        <button class="btn btn-secondary" id="testConnectionBtn">🔌 Test Connections</button>
+                        <button class="btn btn-danger" id="clearSettingsBtn">🗑️ Clear All</button>
+                    </div>
+
+                    <div class="settings-info">
+                        <div class="info-box">
+                            <h4>🔒 Security Note</h4>
+                            <p>Your API keys are stored <strong>locally in your browser</strong> only. They are never
+                                sent to any external server other than the official API endpoints (Groq and Together
+                                AI).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Single Generation Tab -->
+            <div class="tab-content" id="tab-single">
+                <div class="two-column">
+                    <!-- Left Column - Settings -->
+                    <div class="settings-column">
+                        <!-- Script Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>📝 Script</h2>
+                                <div class="toggle-group">
+                                    <button class="toggle-btn active" data-mode="write">Write Script</button>
+                                    <button class="toggle-btn" data-mode="generate">Generate from Title</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Write Script Mode -->
+                                <div class="script-mode" id="mode-write">
+                                    <textarea id="script" placeholder="Enter your video script here..."
+                                        rows="6"></textarea>
+                                </div>
+                                <!-- Generate from Title Mode -->
+                                <div class="script-mode hidden" id="mode-generate">
+                                    <input type="text" id="scriptTitle"
+                                        placeholder="e.g., '10 Shocking Facts About the Ocean'">
+                                    <div class="row">
+                                        <select id="scriptDuration">
+                                            <option value="30 seconds">30 seconds</option>
+                                            <option value="1 minute">1 minute</option>
+                                            <option value="2 minutes" selected>2 minutes</option>
+                                            <option value="3 minutes">3 minutes</option>
+                                            <option value="5 minutes">5 minutes</option>
+                                            <option value="10 minutes">10 minutes</option>
+                                        </select>
+                                    </div>
+                                    <textarea id="scriptStyle"
+                                        placeholder="Style prompt (optional): e.g., 'dramatic with suspense'"
+                                        rows="2"></textarea>
+                                    <p class="hint">📝 Script will be auto-generated when you click Generate Video</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Voice Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>🎙️ Voice</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <select id="voice"></select>
+                                    <button class="btn btn-icon" id="previewVoiceBtn" title="Preview Voice">▶️</button>
+                                </div>
+                                <audio id="voicePreview" hidden></audio>
+                            </div>
+                        </div>
+
+                        <!-- Video Name -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>🎬 Video Name</h2>
+                            </div>
+                            <div class="card-body">
+                                <input type="text" id="videoName" value="MyVideo" placeholder="Video name">
+                            </div>
+                        </div>
+
+                        <!-- Images Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>🖼️ Images</h2>
+                                <div class="toggle-group">
+                                    <button class="toggle-btn active" data-source="custom">Custom Images</button>
+                                    <button class="toggle-btn" data-source="ai">AI Generated</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Custom Images -->
+                                <div class="image-source" id="source-custom">
+                                    <div class="file-upload" id="imageUpload">
+                                        <span>📁 Click or drag images here</span>
+                                        <input type="file" id="imageFiles" multiple accept="image/*">
+                                    </div>
+                                    <div class="image-preview" id="imagePreview"></div>
+                                </div>
+                                <!-- AI Images -->
+                                <div class="image-source hidden" id="source-ai">
+                                    <p class="hint" style="margin-bottom: 0.5rem;">📌 Pollinations is FREE! Together AI
+                                        requires credits.
+                                    </p>
+                                    <div class="row">
+                                        <select id="imageProvider">
+                                            <option value="Pollinations AI (Free)">🆓 Pollinations (Free)</option>
+                                            <option value="Together AI">💳 Together AI</option>
+                                        </select>
+                                    </div>
+                                    <div class="row">
+                                        <select id="imageModel">
+                                            <!-- Pollinations models (default) -->
+                                            <option value="Flux (Free)">Flux (Free)</option>
+                                            <option value="Turbo (Free)">Turbo (Free)</option>
+                                        </select>
+                                        <select id="imageResolution">
+                                            <option value="512x768 (Landscape)">512x768</option>
+                                            <option value="1024x576 (Landscape HD)">1024x576 HD</option>
+                                        </select>
+                                    </div>
+                                    <div class="row">
+                                        <select id="sceneMode">
+                                            <option value="Scene-by-Scene">🎬 Scene-by-Scene (Auto)</option>
+                                            <option value="5 images">5 images</option>
+                                            <option value="10 images" selected>10 images</option>
+                                            <option value="15 images">15 images</option>
+                                            <option value="20 images">20 images</option>
+                                            <option value="30 images">30 images</option>
+                                            <option value="50 images">50 images</option>
+                                            <option value="Custom">Custom</option>
+                                        </select>
+                                        <input type="number" id="customSceneCount" value="10" min="1" max="100"
+                                            class="hidden">
+                                    </div>
+                                    <select id="imageStyle">
+                                        <option value="No Style">No Style</option>
+                                    </select>
+
+                                    <!-- Scene Preview -->
+                                    <div class="scene-preview-section">
+                                        <div class="row">
+                                            <button class="btn btn-secondary" id="previewScenesBtn">🎨 Preview
+                                                Scenes</button>
+                                            <button class="btn btn-danger" id="clearScenesBtn">🗑️ Clear</button>
+                                        </div>
+                                        <div class="scene-gallery" id="sceneGallery"></div>
+                                        <div class="scene-editor hidden" id="sceneEditor">
+                                            <div class="row">
+                                                <input type="number" id="editSceneNum" value="1" min="1">
+                                                <input type="text" id="editScenePrompt"
+                                                    placeholder="New prompt for scene...">
+                                                <button class="btn btn-secondary" id="regenSceneBtn">🔄
+                                                    Regenerate</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Captions Section -->
+                        <div class="card collapsible">
+                            <div class="card-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                <h2>📝 Captions</h2>
+                                <span class="collapse-icon">▼</span>
+                            </div>
+                            <div class="card-body">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="captionsEnabled" checked>
+                                    <span>Enable Captions</span>
+                                </label>
+
+                                <div class="caption-settings" id="captionSettings">
+                                    <div class="row">
+                                        <div class="radio-group">
+                                            <label><input type="radio" name="captionMode" value="single" checked> Single
+                                                Word</label>
+                                            <label><input type="radio" name="captionMode" value="word"> Word
+                                                Group</label>
+                                            <label><input type="radio" name="captionMode" value="line"> Full
+                                                Line</label>
+                                            <label><input type="radio" name="captionMode" value="karaoke"> Karaoke
+                                                (Text)</label>
+                                            <label><input type="radio" name="captionMode" value="karaoke_box"> Karaoke
+                                                (Box)</label>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label>Words per Group:
+                                            <input type="range" id="wordsPerGroup" min="2" max="5" value="3">
+                                            <span id="wordsPerGroupValue">3</span>
+                                        </label>
+                                    </div>
+
+                                    <h4>🔤 Font</h4>
+                                    <select id="font"></select>
+                                    <div class="row">
+                                        <label>Size: <input type="range" id="fontsize" min="20" max="80"
+                                                value="48"><span id="fontsizeValue">48</span></label>
+                                        <label class="checkbox-label"><input type="checkbox" id="bold" checked>
+                                            Bold</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="uppercase" checked>
+                                            UPPERCASE</label>
+                                    </div>
+
+                                    <h4>🎨 Colors</h4>
+                                    <div class="row">
+                                        <label>Text: <input type="color" id="textColor" value="#FFFFFF"></label>
+                                        <label>Highlight: <input type="color" id="highlightColor"
+                                                value="#FFFF00"></label>
+                                    </div>
+                                    <div class="row">
+                                        <label>Outline: <input type="color" id="outlineColor" value="#000000"></label>
+                                        <label>Size: <input type="range" id="outlineSize" min="0" max="8"
+                                                value="3"><span id="outlineSizeValue">3</span></label>
+                                    </div>
+
+                                    <h4>🌟 Effects</h4>
+                                    <div class="row">
+                                        <label class="checkbox-label"><input type="checkbox" id="shadowOn" checked>
+                                            Shadow</label>
+                                        <label>Color: <input type="color" id="shadowColor" value="#000000"></label>
+                                        <label>Depth: <input type="range" id="shadowDepth" min="0" max="6"
+                                                value="2"><span id="shadowDepthValue">2</span></label>
+                                    </div>
+                                    <div class="row">
+                                        <label class="checkbox-label"><input type="checkbox" id="bgOn"> Background
+                                            Box</label>
+                                        <label>Color: <input type="color" id="bgColor" value="#000000"></label>
+                                        <label>Opacity: <input type="range" id="bgOpacity" min="0" max="100"
+                                                value="70"><span id="bgOpacityValue">70</span></label>
+                                    </div>
+
+                                    <h4>📍 Position</h4>
+                                    <div class="row">
+                                        <select id="position">
+                                            <option value="bottom">Bottom</option>
+                                            <option value="middle">Middle</option>
+                                            <option value="top">Top</option>
+                                        </select>
+                                        <label>Margin: <input type="range" id="marginV" min="20" max="150"
+                                                value="50"><span id="marginVValue">50</span></label>
+                                    </div>
+                                    <select id="animation">
+                                        <option value="Pop">Pop</option>
+                                        <option value="Fade">Fade</option>
+                                        <option value="None">None</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transitions Section -->
+                        <div class="card collapsible collapsed">
+                            <div class="card-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                <h2>🎨 Transitions</h2>
+                                <span class="collapse-icon">▼</span>
+                            </div>
+                            <div class="card-body">
+                                <select id="effect">
+                                    <option value="Zoom Combo">Zoom Combo</option>
+                                    <option value="Zoom In">Zoom In</option>
+                                    <option value="Zoom Out">Zoom Out</option>
+                                    <option value="Pan Left">Pan Left</option>
+                                    <option value="Pan Right">Pan Right</option>
+                                    <option value="None">None</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Music Section -->
+                        <div class="card collapsible collapsed">
+                            <div class="card-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                <h2>🎵 Music</h2>
+                                <span class="collapse-icon">▼</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="file-upload" id="musicUpload">
+                                    <span>🎵 Click or drag music file here</span>
+                                    <input type="file" id="musicFile" accept="audio/*">
+                                </div>
+                                <div id="musicFileName"></div>
+                                <label>Volume: <input type="range" id="musicVolume" min="0" max="100" value="20"><span
+                                        id="musicVolumeValue">20%</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button class="btn btn-primary btn-large" id="generateBtn">🚀 Generate Video</button>
+                    </div>
+
+                    <!-- Right Column - Preview -->
+                    <div class="preview-column">
+                        <div class="card preview-card">
+                            <div class="card-header">
+                                <h2>📺 Preview</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="video-container">
+                                    <video id="videoPreview" controls></video>
+                                    <div class="video-placeholder" id="videoPlaceholder">
+                                        <span>🎬</span>
+                                        <p>Your video will appear here</p>
+                                    </div>
+                                </div>
+                                <div class="progress-container hidden" id="progressContainer">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="progressFill"></div>
+                                    </div>
+                                    <div class="progress-text" id="progressText">Starting...</div>
+                                </div>
+                                <div class="status-box" id="statusBox"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Generation Tab -->
+            <div class="tab-content" id="tab-bulk">
+                <div class="two-column">
+                    <!-- Left Column - Add to Queue -->
+                    <div class="settings-column">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>➕ Add to Queue</h2>
+                                <div class="toggle-group" id="bulkScriptToggle">
+                                    <button class="toggle-btn active" data-mode="write">Write Script</button>
+                                    <button class="toggle-btn" data-mode="generate">Generate from Title</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <input type="text" id="bulkName" placeholder="Video name">
+
+                                <!-- Write Script Mode -->
+                                <div class="script-mode" id="bulk-mode-write">
+                                    <textarea id="bulkScript" placeholder="Enter script..." rows="4"></textarea>
+                                </div>
+
+                                <!-- Generate from Title Mode -->
+                                <div class="script-mode hidden" id="bulk-mode-generate">
+                                    <input type="text" id="bulkScriptTitle"
+                                        placeholder="e.g., '10 Shocking Facts About the Ocean'">
+                                    <div class="row">
+                                        <select id="bulkScriptDuration">
+                                            <option value="30 seconds">30 seconds</option>
+                                            <option value="1 minute">1 minute</option>
+                                            <option value="2 minutes" selected>2 minutes</option>
+                                            <option value="3 minutes">3 minutes</option>
+                                            <option value="5 minutes">5 minutes</option>
+                                            <option value="10 minutes">10 minutes</option>
+                                        </select>
+                                    </div>
+                                    <textarea id="bulkScriptStyle"
+                                        placeholder="Style prompt (optional): e.g., 'dramatic with suspense'"
+                                        rows="2"></textarea>
+                                    <p class="hint">📝 Script will be auto-generated when you click Add to Queue</p>
+                                </div>
+
+                                <select id="bulkVoice"></select>
+
+                                <div class="row">
+                                    <button class="btn btn-secondary" id="addToQueueBtn">➕ Add to Queue</button>
+                                    <button class="btn btn-danger" id="clearQueueBtn">🗑️ Clear Queue</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Queue Display -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>📋 Queue</h2>
+                                <span class="badge" id="queueCount">0</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="queue-list" id="queueList">
+                                    <div class="queue-empty">Queue is empty</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Images Section (Bulk) -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>🖼️ Images</h2>
+                                <div class="toggle-group" id="bulkImageToggle">
+                                    <button class="toggle-btn active" data-source="custom">Custom Images</button>
+                                    <button class="toggle-btn" data-source="ai">AI Generated</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Custom Images (Bulk) -->
+                                <div class="image-source" id="bulk-source-custom">
+                                    <div class="file-upload" id="bulkImageUpload">
+                                        <span>📁 Click or drag images here</span>
+                                        <input type="file" id="bulkImageFiles" multiple accept="image/*">
+                                    </div>
+                                    <div class="image-preview" id="bulkImagePreview"></div>
+                                </div>
+                                <!-- AI Images (Bulk) -->
+                                <div class="image-source hidden" id="bulk-source-ai">
+                                    <p class="hint" style="margin-bottom: 0.5rem;">📌 API keys are set in Settings tab
+                                    </p>
+                                    <div class="row">
+                                        <select id="bulkImageModel">
+                                            <option value="Flux Schnell">Flux Schnell</option>
+                                        </select>
+                                        <select id="bulkImageResolution">
+                                            <option value="512x768 (Landscape)">512x768</option>
+                                            <option value="1024x576 (Landscape HD)">1024x576 HD</option>
+                                        </select>
+                                    </div>
+                                    <div class="row">
+                                        <select id="bulkSceneMode">
+                                            <option value="30 images">30 images</option>
+                                            <option value="50 images">50 images</option>
+                                            <option value="80 images">80 images</option>
+                                            <option value="Scene-by-Scene (1 per sentence)">Scene-by-Scene</option>
+                                        </select>
+                                        <select id="bulkImageStyle">
+                                            <option value="No Style">No Style</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card collapsible">
+                            <div class="card-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                <h2>📝 Captions (Bulk)</h2>
+                                <span class="collapse-icon">▼</span>
+                            </div>
+                            <div class="card-body">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="bulkCaptionsEnabled" checked>
+                                    <span>Enable Captions</span>
+                                </label>
+                                <div class="caption-settings">
+                                    <div class="row">
+                                        <div class="radio-group">
+                                            <label><input type="radio" name="bulkCaptionMode" value="single" checked>
+                                                Single Word</label>
+                                            <label><input type="radio" name="bulkCaptionMode" value="word"> Word
+                                                Group</label>
+                                            <label><input type="radio" name="bulkCaptionMode" value="line"> Full
+                                                Line</label>
+                                            <label><input type="radio" name="bulkCaptionMode" value="karaoke"> Karaoke
+                                                (Text)</label>
+                                            <label><input type="radio" name="bulkCaptionMode" value="karaoke_box">
+                                                Karaoke (Box)</label>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label>Words per Group:
+                                            <input type="range" id="bulkWordsPerGroup" min="2" max="5" value="3">
+                                            <span id="bulkWordsPerGroupValue">3</span>
+                                        </label>
+                                    </div>
+                                    <h4>🔤 Font</h4>
+                                    <select id="bulkFont"></select>
+                                    <div class="row">
+                                        <label>Size: <input type="range" id="bulkFontsize" min="20" max="80"
+                                                value="48"><span id="bulkFontsizeValue">48</span></label>
+                                        <label class="checkbox-label"><input type="checkbox" id="bulkBold" checked>
+                                            Bold</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="bulkUppercase" checked>
+                                            UPPERCASE</label>
+                                    </div>
+                                    <h4>🎨 Colors</h4>
+                                    <div class="row">
+                                        <label>Text: <input type="color" id="bulkTextColor" value="#FFFFFF"></label>
+                                        <label>Highlight: <input type="color" id="bulkHighlightColor"
+                                                value="#FFFF00"></label>
+                                    </div>
+                                    <div class="row">
+                                        <label>Outline: <input type="color" id="bulkOutlineColor"
+                                                value="#000000"></label>
+                                        <label>Size: <input type="range" id="bulkOutlineSize" min="0" max="8"
+                                                value="3"><span id="bulkOutlineSizeValue">3</span></label>
+                                    </div>
+                                    <h4>🌟 Effects</h4>
+                                    <div class="row">
+                                        <label class="checkbox-label"><input type="checkbox" id="bulkShadowOn" checked>
+                                            Shadow</label>
+                                        <label>Color: <input type="color" id="bulkShadowColor" value="#000000"></label>
+                                        <label>Depth: <input type="range" id="bulkShadowDepth" min="0" max="6"
+                                                value="2"><span id="bulkShadowDepthValue">2</span></label>
+                                    </div>
+                                    <div class="row">
+                                        <label class="checkbox-label"><input type="checkbox" id="bulkBgOn"> Background
+                                            Box</label>
+                                        <label>Color: <input type="color" id="bulkBgColor" value="#000000"></label>
+                                        <label>Opacity: <input type="range" id="bulkBgOpacity" min="0" max="100"
+                                                value="70"><span id="bulkBgOpacityValue">70</span></label>
+                                    </div>
+                                    <h4>📍 Position</h4>
+                                    <div class="row">
+                                        <select id="bulkPosition">
+                                            <option value="bottom">Bottom</option>
+                                            <option value="middle">Middle</option>
+                                            <option value="top">Top</option>
+                                        </select>
+                                        <label>Margin: <input type="range" id="bulkMarginV" min="20" max="150"
+                                                value="50"><span id="bulkMarginVValue">50</span></label>
+                                    </div>
+                                    <select id="bulkAnimation">
+                                        <option value="Pop">Pop</option>
+                                        <option value="Fade">Fade</option>
+                                        <option value="None">None</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card collapsible collapsed">
+                            <div class="card-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                <h2>🎨 Transitions (Bulk)</h2>
+                                <span class="collapse-icon">▼</span>
+                            </div>
+                            <div class="card-body">
+                                <select id="bulkEffect">
+                                    <option value="Zoom Combo">Zoom Combo</option>
+                                    <option value="Zoom In">Zoom In</option>
+                                    <option value="Zoom Out">Zoom Out</option>
+                                    <option value="Pan Left">Pan Left</option>
+                                    <option value="Pan Right">Pan Right</option>
+                                    <option value="None">None</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="card collapsible collapsed">
+                            <div class="card-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                <h2>🎵 Music (Bulk)</h2>
+                                <span class="collapse-icon">▼</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="file-upload" id="bulkMusicUpload">
+                                    <span>🎵 Click or drag music file here</span>
+                                    <input type="file" id="bulkMusicFile" accept="audio/*">
+                                </div>
+                                <div id="bulkMusicFileName"></div>
+                                <label>Volume: <input type="range" id="bulkMusicVolume" min="0" max="100"
+                                        value="20"><span id="bulkMusicVolumeValue">20%</span></label>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-bottom: 1rem; padding: 0 0.5rem;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="autoDownloadBulk" checked>
+                                <span>⬇️ Auto-download finished videos</span>
+                            </label>
+                        </div>
+
+                        <button class="btn btn-primary btn-large" id="processQueueBtn">🚀 Process All Videos</button>
+                        <button class="btn btn-secondary btn-large" id="downloadAllBtn">⬇️ Download All (ZIP)</button>
+                    </div>
+
+                    <!-- Right Column - Results -->
+                    <div class="preview-column">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>🎬 Generated Videos</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="video-gallery" id="bulkVideoGallery"></div>
+                                <video id="bulkVideoPreview" controls></video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Vidzeo Local - AI Video Generator | Made with ❤️</p>
+        </footer>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
